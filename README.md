@@ -272,4 +272,4 @@ rules, or corrections to any source. Open an issue or submit a pull request.
 
 ## 📄 License
 
-See [LICENSE](./LICENSE) for details.
+Released under the [MIT License](./LICENSE). © 2026 [lapaca](https://github.com/lapaca)
