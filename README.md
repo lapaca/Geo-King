@@ -1,4 +1,4 @@
-**auto GEO&SEO Platform ****
+Auto GEO&SEO Platform 
 
 **GEO&SEO — engine research List updating (72 entries)
 Compiled 2026-08-28. All URLs accessed 2026-08-28.**
