@@ -1,7 +1,8 @@
 
-SEO & GEO — engine research List updating (72 entries)
-Compiled 2026-08-28. All URLs accessed 2026-08-28.
+**** GEO&SEO — engine research List updating (72 entries)
+Compiled 2026-08-28. All URLs accessed 2026-08-28.**
 
+**auto GEO&SEO Platform **
 
 
 AI search engines are evolving every month, and the rules must keep pace. We commit to releasing a rule-engine update every month, aligning with the latest retrieval preferences of mainstream AI models (GPT-5, Claude 5, DeepSeek-V3, Doubao, etc.).
@@ -9,19 +10,34 @@ AI search engines are evolving every month, and the rules must keep pace. We com
 August update (already released this month):
 
 Added preliminary support for multimodal search: now checks whether a page contains image descriptions that can be understood by visual models (not just alt text, but also surrounding context around images).
-
 Adjusted Schema weight tiers: based on the latest papers, QAPage and HowTo have increased in weight, while display-oriented fields of Product have been downgraded.
-
 Optimized paragraph chunking length thresholds: changed from a fixed 1,000-character limit to dynamic segmentation based on semantic boundaries, better matching the actual chunking logic used in RAG retrieval.
-
 Expanded AI crawler User-Agent detection to include checks for ClaudeBot/2.0 and PerplexityBot/2.0.
-
 We will release version notes every subsequent month. You can treat this like subscribing to security patches—keeping your rule base always aligned with the latest industry practices.
 
 
 
 
-GEO Rules  ( basic Items – Made Understandable for Engineers)
+1. Tech Stack (Practical, No Fluff)
+<table style="border-collapse: collapse; width: 100%; border: 1px solid #ddd;"> <thead> <tr style="background-color: #f2f2f2; border-bottom: 2px solid #aaa;"> <th style="border: 1px solid #ddd; padding: 8px;">Technology</th> <th style="border: 1px solid #ddd; padding: 8px;">Purpose</th> <th style="border: 1px solid #ddd; padding: 8px;">Remarks</th> </tr> </thead> <tbody> <tr><td style="border: 1px solid #ddd; padding: 8px;">Next.js 14 (App Router)</td><td style="border: 1px solid #ddd; padding: 8px;">Full‑stack, API + frontend in one repo</td><td style="border: 1px solid #ddd; padding: 8px;">Unified project structure</td></tr> <tr><td style="border: 1px solid #ddd; padding: 8px;">TypeScript</td><td style="border: 1px solid #ddd; padding: 8px;">End‑to‑end type safety</td><td style="border: 1px solid #ddd; padding: 8px;">Shared types across frontend/backend</td></tr> <tr><td style="border: 1px solid #ddd; padding: 8px;">Tailwind + shadcn/ui</td><td style="border: 1px solid #ddd; padding: 8px;">Rapid UI development</td><td style="border: 1px solid #ddd; padding: 8px;">Component‑based atomic CSS</td></tr> <tr><td style="border: 1px solid #ddd; padding: 8px;">SQLite + Prisma</td><td style="border: 1px solid #ddd; padding: 8px;">Zero‑ops database for MVP</td><td style="border: 1px solid #ddd; padding: 8px;">Seamless migration to PostgreSQL later</td></tr> <tr><td style="border: 1px solid #ddd; padding: 8px;">NextAuth.js</td><td style="border: 1px solid #ddd; padding: 8px;">Unified authentication</td><td style="border: 1px solid #ddd; padding: 8px;">No manual JWT – built‑in OAuth</td></tr> <tr><td style="border: 1px solid #ddd; padding: 8px;">Claude API</td><td style="border: 1px solid #ddd; padding: 8px;">Single‑call diagnosis + suggestions</td><td style="border: 1px solid #ddd; padding: 8px;">Cost‑effective</td></tr> <tr><td style="border: 1px solid #ddd; padding: 8px;">cheerio + fetch</td><td style="border: 1px solid #ddd; padding: 8px;">Lightweight scraping & parsing</td><td style="border: 1px solid #ddd; padding: 8px;">Timeout retry + fingerprint emulation for large sites (Taobao, etc.)</td></tr> <tr><td style="border: 1px solid #ddd; padding: 8px;">Vercel</td><td style="border: 1px solid #ddd; padding: 8px;">Deployment & hosting</td><td style="border: 1px solid #ddd; padding: 8px;">One‑click deploy, env vars for secrets</td></tr> </tbody> </table>
+
+=====================================================================
+
+
+
+
+**GEO Rules  ( basic Items – Made Understandable for Engineers)**
+Check Item	Why It Matters (In Plain English)
+JSON-LD Schema type & weight	AI “confirms” your identity from structured data. Article / Organization / FAQPage are hard requirements for being indexed; Product / Service determine ranking. Flashy decorative fields (e.g., empty review values) are ignored by models—don’t include them.
+Schema field consistency	GEO demands extremely high data accuracy. One wrong date or a misspelled author name will make AI doubt your reliability and directly lower your weight.
+Brand entity consistency	Your brand name must be identical across the page, Schema, and external references. Otherwise, AI cannot associate your content with the correct knowledge‑graph node.
+AI crawler permissions	If robots.txt blocks GPTBot, ClaudeBot, or Google‑Extended, large models simply cannot see you. Many people overlook this.
+Paragraph chunking adaptability	AI uses RAG to split pages into small chunks for retrieval. If a single <p> exceeds 1,000 characters, key arguments get fragmented, causing vector‑matching failure. We recommend 150–250 characters per paragraph with clear structure.
+Heading hierarchy tree structure	AI cannot attach H1/H2 context to each chunk during retrieval. Therefore, you must use a clear H2→H3→H4 tree structure, so every small chunk carries its own “origin” information.
+E‑E‑A‑T signals	Experience, Expertise, Authoritativeness, Trustworthiness. Pages must have clear author bylines, publication dates, and traceable references for AI to dare to cite you.
+Citation quality & sources	If your content cites authoritative data (e.g., government reports, academic papers), AI will exponentially boost your weight when tracing sources.
+Content freshness	Experimental data shows that content refreshed within 13 weeks sees a 67% increase in AI citation rates. Even “evergreen” knowledge should have its dates and details updated regularly.
+
 Check Item	Why It Matters (In Plain English)
 JSON-LD Schema type & weight	AI “confirms” your identity from structured data. Article / Organization / FAQPage are hard requirements for being indexed; Product / Service determine ranking. Flashy decorative fields (e.g., empty review values) are ignored by models—don’t include them.
 Schema field consistency	GEO demands extremely high data accuracy. One wrong date or a misspelled author name will make AI doubt your reliability and directly lower your weight.
@@ -34,10 +50,6 @@ Citation quality & sources	If your content cites authoritative data (e.g., gover
 Content freshness	Experimental data shows that content refreshed within 13 weeks sees a 67% increase in AI citation rates. Even “evergreen” knowledge should have its dates and details updated regularly.
 
 
-1. Tech Stack (Practical, No Fluff)
-<table style="border-collapse: collapse; width: 100%; border: 1px solid #ddd;"> <thead> <tr style="background-color: #f2f2f2; border-bottom: 2px solid #aaa;"> <th style="border: 1px solid #ddd; padding: 8px;">Technology</th> <th style="border: 1px solid #ddd; padding: 8px;">Purpose</th> <th style="border: 1px solid #ddd; padding: 8px;">Remarks</th> </tr> </thead> <tbody> <tr><td style="border: 1px solid #ddd; padding: 8px;">Next.js 14 (App Router)</td><td style="border: 1px solid #ddd; padding: 8px;">Full‑stack, API + frontend in one repo</td><td style="border: 1px solid #ddd; padding: 8px;">Unified project structure</td></tr> <tr><td style="border: 1px solid #ddd; padding: 8px;">TypeScript</td><td style="border: 1px solid #ddd; padding: 8px;">End‑to‑end type safety</td><td style="border: 1px solid #ddd; padding: 8px;">Shared types across frontend/backend</td></tr> <tr><td style="border: 1px solid #ddd; padding: 8px;">Tailwind + shadcn/ui</td><td style="border: 1px solid #ddd; padding: 8px;">Rapid UI development</td><td style="border: 1px solid #ddd; padding: 8px;">Component‑based atomic CSS</td></tr> <tr><td style="border: 1px solid #ddd; padding: 8px;">SQLite + Prisma</td><td style="border: 1px solid #ddd; padding: 8px;">Zero‑ops database for MVP</td><td style="border: 1px solid #ddd; padding: 8px;">Seamless migration to PostgreSQL later</td></tr> <tr><td style="border: 1px solid #ddd; padding: 8px;">NextAuth.js</td><td style="border: 1px solid #ddd; padding: 8px;">Unified authentication</td><td style="border: 1px solid #ddd; padding: 8px;">No manual JWT – built‑in OAuth</td></tr> <tr><td style="border: 1px solid #ddd; padding: 8px;">Claude API</td><td style="border: 1px solid #ddd; padding: 8px;">Single‑call diagnosis + suggestions</td><td style="border: 1px solid #ddd; padding: 8px;">Cost‑effective</td></tr> <tr><td style="border: 1px solid #ddd; padding: 8px;">cheerio + fetch</td><td style="border: 1px solid #ddd; padding: 8px;">Lightweight scraping & parsing</td><td style="border: 1px solid #ddd; padding: 8px;">Timeout retry + fingerprint emulation for large sites (Taobao, etc.)</td></tr> <tr><td style="border: 1px solid #ddd; padding: 8px;">Vercel</td><td style="border: 1px solid #ddd; padding: 8px;">Deployment & hosting</td><td style="border: 1px solid #ddd; padding: 8px;">One‑click deploy, env vars for secrets</td></tr> </tbody> </table>
-
-=====================================================================
 
 OFFICIAL SEARCH ENGINE SOURCES
 =====================================================================
