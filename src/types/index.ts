@@ -51,6 +51,17 @@ export interface CrawlData {
     inlineScripts: number
   }
 
+  // Link analysis extensions (rel attribute + broken link detection)
+  nofollowCount: number
+  brokenLinks: { href: string; text: string; statusCode: number | null }[]
+
+  // Technical SEO extensions
+  hreflang: string[]         // href values of <link rel="alternate" hreflang="...">
+  ampLink: string | null     // <link rel="amphtml" href="...">
+  manifest: string | null    // <link rel="manifest" href="...">
+  serviceWorker: boolean     // navigator.serviceWorker.register detected in page source
+  deprecatedTags: string[]   // deprecated HTML tag names found (center, font, marquee, ...)
+
   bodyText: string
 }
 

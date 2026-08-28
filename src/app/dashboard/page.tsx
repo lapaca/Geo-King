@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Trash2 } from 'lucide-react'
 import type { ReportListItem } from '@/types'
 
 export default function DashboardPage() {
@@ -57,6 +58,17 @@ export default function DashboardPage() {
     return 'text-red-600'
   }
 
+  async function handleDelete(r: ReportListItem) {
+    if (!window.confirm(`确定删除这份分析报告吗？\n${r.url}`)) return
+    try {
+      const res = await fetch(`/api/report/${r.id}`, { method: 'DELETE' })
+      if (!res.ok) return
+      setReports((prev) => prev.filter((item) => item.id !== r.id))
+    } catch {
+      // leave list unchanged on network failure
+    }
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="flex items-center justify-between">
@@ -81,17 +93,16 @@ export default function DashboardPage() {
           {reports.map((r) => {
             const status = getStatusLabel(r.status)
             return (
-              <Link
+              <div
                 key={r.id}
-                href={`/report/${r.id}`}
                 className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md"
               >
-                <div className="min-w-0 flex-1">
+                <Link href={`/report/${r.id}`} className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-gray-900">{r.url}</p>
                   <p className="mt-1 text-xs text-gray-400">
                     {new Date(r.createdAt).toLocaleString('zh-CN')}
                   </p>
-                </div>
+                </Link>
                 <div className="ml-4 flex items-center gap-4">
                   <div className="text-right">
                     <p className="text-xs text-gray-400">SEO</p>
@@ -108,8 +119,15 @@ export default function DashboardPage() {
                   <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${status.color}`}>
                     {status.text}
                   </span>
+                  <button
+                    onClick={() => handleDelete(r)}
+                    className="rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                    title="删除"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
-              </Link>
+              </div>
             )
           })}
         </div>

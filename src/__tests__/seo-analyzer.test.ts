@@ -25,6 +25,13 @@ function makeCrawlData(overrides: Partial<CrawlData> = {}): CrawlData {
     hasSitemap: true,
     semanticTags: { hasArticle: true, hasSection: true, hasNav: true, hasMain: true, hasAside: false, hasHeader: true, hasFooter: true },
     domCounts: { iframes: 0, forms: 1, cssFiles: 2, jsFiles: 3, inlineStyles: 0, inlineScripts: 1 },
+    nofollowCount: 0,
+    brokenLinks: [],
+    hreflang: [],
+    ampLink: null,
+    manifest: null,
+    serviceWorker: false,
+    deprecatedTags: [],
     bodyText: 'Test content for analysis.',
     ...overrides,
   }

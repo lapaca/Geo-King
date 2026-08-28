@@ -106,14 +106,14 @@ export async function POST(req: Request) {
     })
   }
 
-  let body: { url?: string }
+  let body: { url?: string; force?: boolean }
   try { body = await req.json() } catch {
     return new Response(JSON.stringify({ error: '请求体格式错误' }), {
       status: 400, headers: { 'Content-Type': 'application/json' },
     })
   }
 
-  const { url } = body
+  const { url, force } = body
   if (!url) {
     return new Response(JSON.stringify({ error: 'URL 必填' }), {
       status: 400,
@@ -146,8 +146,8 @@ export async function POST(req: Request) {
     })
   }
 
-  // Check cache: same user + same URL + completed within 24h
-  const cached = await prisma.report.findFirst({
+  // Check cache: same user + same URL + completed within 24h (skipped on force re-analysis)
+  const cached = force ? null : await prisma.report.findFirst({
     where: {
       userId,
       urlHash: urlHashValue,

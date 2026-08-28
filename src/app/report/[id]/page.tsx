@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { use } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, RefreshCw, Download } from 'lucide-react'
+import { ArrowLeft, RefreshCw, Download, Trash2, RotateCw } from 'lucide-react'
 import { ScoreRing } from '@/components/ScoreRing'
 import { IssueList } from '@/components/IssueList'
 import { DiffPreview } from '@/components/DiffPreview'
@@ -37,6 +37,10 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState<TabType>('overview')
+
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [reanalyzing, setReanalyzing] = useState(false)
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const fetchReport = useCallback(async () => {
     try {
@@ -76,14 +80,77 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
     return () => { cancelled = true; clearTimeout(timer) }
   }, [authStatus, router, fetchReport])
 
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current)
+    }
+  }, [])
+
   function handleOptimizationUpdate(optId: string, update: Partial<Optimization>) {
     if (!report) return
-    setReport({
-      ...report,
-      optimizations: report.optimizations.map((o) =>
-        o.id === optId ? { ...o, ...update } : o
-      ),
-    })
+    const nextOptimizations = report.optimizations.map((o) =>
+      o.id === optId ? { ...o, ...update } : o
+    )
+    setReport({ ...report, optimizations: nextOptimizations })
+    scheduleSave(nextOptimizations)
+  }
+
+  function scheduleSave(optimizations: Optimization[]) {
+    if (!report) return
+    const reportId = report.id
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    setSaveState('saving')
+    saveTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/report/${reportId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ optimizations }),
+        })
+        if (!res.ok) throw new Error('save failed')
+        setSaveState('saved')
+        setTimeout(() => setSaveState('idle'), 2000)
+      } catch {
+        setSaveState('error')
+      }
+    }, 800)
+  }
+
+  async function handleReanalyze() {
+    if (!report || reanalyzing) return
+    setReanalyzing(true)
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: report.url, force: true }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.reportId) {
+        setError(data?.error || '重新分析失败')
+        setReanalyzing(false)
+        return
+      }
+      router.push(`/report/${data.reportId}`)
+    } catch {
+      setError('网络错误，请重试')
+      setReanalyzing(false)
+    }
+  }
+
+  async function handleDelete() {
+    if (!report) return
+    if (!window.confirm('确定删除这份分析报告吗？此操作不可撤销。')) return
+    try {
+      const res = await fetch(`/api/report/${report.id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        setError('删除失败')
+        return
+      }
+      router.push('/dashboard')
+    } catch {
+      setError('网络错误，请重试')
+    }
   }
 
   if (authStatus === 'loading' || loading) {
@@ -161,12 +228,47 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
             </div>
           </div>
           {report.status === 'COMPLETED' && (
+            <div className="flex items-center gap-2">
+              {saveState === 'saving' && (
+                <span className="flex items-center gap-1 text-xs text-gray-400">
+                  <RefreshCw className="h-3 w-3 animate-spin" />
+                  保存中
+                </span>
+              )}
+              {saveState === 'saved' && <span className="text-xs text-green-600">已保存</span>}
+              {saveState === 'error' && <span className="text-xs text-red-500">保存失败</span>}
+              <button
+                onClick={() => setActiveTab('optimizations')}
+                className="flex items-center gap-1.5 rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800"
+              >
+                <Download className="h-3.5 w-3.5" />
+                导出优化内容
+              </button>
+              <button
+                onClick={handleReanalyze}
+                disabled={reanalyzing}
+                className="flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                <RotateCw className={`h-3.5 w-3.5 ${reanalyzing ? 'animate-spin' : ''}`} />
+                重新分析
+              </button>
+              <button
+                onClick={handleDelete}
+                className="flex items-center gap-1.5 rounded-md border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                删除
+              </button>
+            </div>
+          )}
+          {report.status === 'FAILED' && (
             <button
-              onClick={() => setActiveTab('optimizations')}
-              className="flex items-center gap-1.5 rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800"
+              onClick={handleReanalyze}
+              disabled={reanalyzing}
+              className="flex items-center gap-1.5 rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800 disabled:opacity-50"
             >
-              <Download className="h-3.5 w-3.5" />
-              导出优化内容
+              <RotateCw className={`h-3.5 w-3.5 ${reanalyzing ? 'animate-spin' : ''}`} />
+              重试分析
             </button>
           )}
         </div>

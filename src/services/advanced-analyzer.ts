@@ -107,8 +107,8 @@ export class AdvancedAnalyzer {
     return {
       internalCount: data.internalLinks.length,
       externalCount: data.externalLinks.length,
-      nofollowCount: 0, // would need rel attribute parsing
-      brokenCount: 0,
+      nofollowCount: data.nofollowCount,
+      brokenCount: data.brokenLinks.length,
       anchorTextDiversity,
       linkDepthDistribution: depthDist,
     }
@@ -117,16 +117,16 @@ export class AdvancedAnalyzer {
   private analyzeTechnical(data: CrawlData): AdvancedMetrics['technical'] {
     const counts = data.domCounts
     return {
-      hasHreflang: false,
-      hasAmpVersion: false,
-      hasPWA: false,
-      hasServiceWorker: false,
-      hasWebManifest: false,
+      hasHreflang: data.hreflang.length > 0,
+      hasAmpVersion: !!data.ampLink,
+      hasPWA: !!data.manifest || data.serviceWorker,
+      hasServiceWorker: data.serviceWorker,
+      hasWebManifest: !!data.manifest,
       cssFileCount: counts.cssFiles,
       jsFileCount: counts.jsFiles,
       inlineStyleCount: counts.inlineStyles,
       inlineScriptCount: counts.inlineScripts,
-      deprecatedTagCount: 0,
+      deprecatedTagCount: data.deprecatedTags.length,
       iframeCount: counts.iframes,
       formCount: counts.forms,
     }

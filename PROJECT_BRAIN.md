@@ -99,3 +99,20 @@ Next.js 16 + TypeScript + Tailwind CSS | Prisma 7 + SQLite (better-sqlite3) | Ne
 ### 待验证
 - 配置真实 ANTHROPIC_API_KEY 后测试 Claude API 调用
 - 浏览器端完整流程（注册→登录→分析→查看报告→对比→导出）
+
+## 迭代增强记录 (2026-08-28)
+
+> TypeScript 零报错，Build 成功，43 个测试全绿。
+
+基于最新提交（高级仪表盘 / 专家模块 / 架构加固）之上的增量增强：
+
+1. **补齐占位指标** — `CrawlData` 新增 `nofollowCount` / `brokenLinks` / `hreflang` / `ampLink` / `manifest` / `serviceWorker` / `deprecatedTags`；`advanced-analyzer.ts` 移除 8 个硬编码占位值（nofollow/broken/hreflang/AMP/PWA/SW/manifest/deprecatedTags），全部改为真实数据。
+2. **死链检测** — `crawler.ts` 新增 `checkBrokenLinks`：对站内链接做 HEAD 探测（最多 20 个、并发 5、超时 5s、跳过 401/403/405/429 等反爬/方法受限状态码），同源安全。
+3. **报告管理** — 新增 `DELETE /api/report/[id]`；`POST /api/analyze` 支持 `force` 参数绕过 24h 缓存；报告页新增「重新分析」「删除」，dashboard 新增删除按钮。
+4. **优化决策持久化** — 新增 `PATCH /api/report/[id]`，保存 accepted/selectedIndex/userEdited；报告页 debounce(800ms) 自动保存 + 保存状态指示，刷新后不丢失选择。
+5. **前端展示** — AdvancedDashboard 修复 "Nofollow Ratio" 误标为计数、新增 Broken Links 卡片与 "Technical SEO Health" 区块（TechFlag 组件渲染 hreflang/AMP/PWA/SW/Manifest/废弃标签）。
+6. **测试** — 新增 `src/__tests__/advanced-analyzer.test.ts`（6 例），更新既有 fixture 以适配新 `CrawlData` 字段。
+
+### 环境注意
+- 本机 `NODE_OPTIONS` 含 `--use-system-ca` 会导致 `next build` 报 `ERR_WORKER_INVALID_EXEC_ARGV`，需 `env -u NODE_OPTIONS` 运行。
+- Prisma 需要 `.env`（`prisma.config.ts` 通过 `dotenv/config` 只读 `.env`），`DATABASE_URL="file:./dev.db"`。

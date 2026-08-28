@@ -6,6 +6,17 @@ const MAX_BODY_TEXT = 5000
 const FETCH_TIMEOUT = 15000
 const MAX_REDIRECTS = 5
 
+// Broken-link audit bounds (keeps the audit fast and safe)
+const MAX_LINK_CHECKS = 20
+const LINK_CHECK_CONCURRENCY = 5
+const LINK_CHECK_TIMEOUT = 5000
+
+// Deprecated/obsolete HTML tags flagged during the technical SEO pass
+const DEPRECATED_TAGS = ['center', 'font', 'marquee', 'blink', 'big', 'strike', 'acronym', 'dir', 'frame', 'frameset', 'noframes']
+
+// Status codes that do not imply a broken link (bot protection / method restrictions)
+const LINK_CHECK_SKIP_STATUS = new Set([401, 403, 405, 406, 408, 425, 429, 501, 503])
+
 export class CrawlerService {
   async crawl(url: string): Promise<CrawlData> {
     const start = Date.now()
@@ -58,6 +69,9 @@ export class CrawlerService {
       this.checkSitemap(baseUrl.origin),
     ])
 
+    const links = this.extractLinks($, baseUrl)
+    const brokenLinks = await this.checkBrokenLinks(links.internalLinks, baseUrl)
+
     return {
       url,
       finalUrl,
@@ -70,11 +84,14 @@ export class CrawlerService {
       structuredData: this.extractStructuredData($),
       headings: this.extractHeadings($),
       images: this.extractImages($, baseUrl),
-      ...this.extractLinks($, baseUrl),
+      ...links,
       robotsTxt,
       hasSitemap,
       semanticTags: this.detectSemanticTags($),
       domCounts: this.countDomElements($),
+      nofollowCount: this.countNofollowLinks($),
+      brokenLinks,
+      ...this.extractTechnicalSignals($, html),
       bodyText: this.extractBodyText($),
     }
   }
@@ -225,5 +242,92 @@ export class CrawlerService {
       hasHeader: $('header').length > 0,
       hasFooter: $('footer').length > 0,
     }
+  }
+
+  private countNofollowLinks($: cheerio.CheerioAPI): number {
+    return $('a[rel]').filter((_, el) => {
+      const rel = ($(el).attr('rel') || '').toLowerCase().split(/\s+/)
+      return rel.includes('nofollow') || rel.includes('ugc') || rel.includes('sponsored')
+    }).length
+  }
+
+  /**
+   * Extract technical SEO signals that currently power the AdvancedMetrics
+   * technical section: hreflang, AMP, PWA/manifest, service worker, deprecated tags.
+   */
+  private extractTechnicalSignals($: cheerio.CheerioAPI, rawHtml: string) {
+    const hreflang: string[] = []
+    $('link[rel="alternate"][hreflang]').each((_, el) => {
+      const href = $(el).attr('hreflang')
+      if (href) hreflang.push(href)
+    })
+
+    const ampLink = $('link[rel="amphtml"]').attr('href')?.trim() || null
+    const manifest = $('link[rel="manifest"]').attr('href')?.trim() || null
+
+    // Service worker registration is only declared client-side; detect the
+    // canonical registration call in inline scripts / raw page source.
+    const serviceWorker = /navigator\s*\.\s*serviceWorker\s*\.\s*register\s*\(/.test(rawHtml)
+
+    const deprecatedTags: string[] = []
+    for (const tag of DEPRECATED_TAGS) {
+      if ($(tag).length > 0) deprecatedTags.push(tag)
+    }
+
+    return { hreflang, ampLink, manifest, serviceWorker, deprecatedTags }
+  }
+
+  /**
+   * Probe a bounded sample of internal links for HTTP error status codes.
+   * Head requests only, with a concurrency pool and per-request timeout.
+   * Only same-origin links are checked (SSRF-safe) and transient conditions
+   * (bot protection, method restrictions, timeouts) are deliberately ignored.
+   */
+  private async checkBrokenLinks(
+    internalLinks: CrawlData['internalLinks'],
+    baseUrl: URL
+  ): Promise<CrawlData['brokenLinks']> {
+    // Deduplicate by normalized path and bound the audit sample size.
+    const seen = new Set<string>()
+    const targets: { href: string; text: string }[] = []
+    for (const link of internalLinks) {
+      if (targets.length >= MAX_LINK_CHECKS) break
+      const absolute = new URL(link.href, baseUrl.origin).toString()
+      if (seen.has(absolute)) continue
+      seen.add(absolute)
+      targets.push({ href: absolute, text: link.text })
+    }
+
+    const broken: CrawlData['brokenLinks'] = []
+    let cursor = 0
+
+    async function worker() {
+      while (cursor < targets.length) {
+        const target = targets[cursor++]
+        let status: number | null = null
+        try {
+          const res = await fetch(target.href, {
+            method: 'HEAD',
+            signal: AbortSignal.timeout(LINK_CHECK_TIMEOUT),
+            headers: { 'User-Agent': 'GeoSeoBot/1.0' },
+            redirect: 'manual',
+          })
+          status = res.status
+        } catch {
+          // Network/DNS failure — treat as indeterminate, not broken.
+          continue
+        }
+
+        // 3xx redirects are healthy (handled manually); only 4xx/5xx count as broken.
+        if (status !== null && status >= 400 && !LINK_CHECK_SKIP_STATUS.has(status)) {
+          broken.push({ href: target.href, text: target.text, statusCode: status })
+        }
+      }
+    }
+
+    const pool = Array.from({ length: Math.min(LINK_CHECK_CONCURRENCY, targets.length) }, () => worker())
+    await Promise.all(pool)
+
+    return broken
   }
 }

@@ -109,8 +109,26 @@ function ProgressBar({ label, value, max = 100, color = '#3b82f6' }: {
   )
 }
 
+function TechFlag({ label, value, hint }: { label: string; value: boolean; hint: string }) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-gray-600">{label}</span>
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+            value ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
+          }`}
+        >
+          {value ? '✓' : '✗'}
+        </span>
+      </div>
+      <p className="mt-1 text-xs text-gray-400">{hint}</p>
+    </div>
+  )
+}
+
 export function AdvancedDashboard({ metrics }: { metrics: AdvancedMetrics }) {
-  const { performance, content, links, geoAdvanced, competitiveness, radarData } = metrics
+  const { performance, content, links, technical, geoAdvanced, competitiveness, radarData } = metrics
 
   return (
     <div className="space-y-6">
@@ -199,9 +217,26 @@ export function AdvancedDashboard({ metrics }: { metrics: AdvancedMetrics }) {
             <MetricCard icon={Link2} label="Internal Links" value={links.internalCount} sublabel="站内链接" color="green" />
             <MetricCard icon={Link2} label="External Links" value={links.externalCount} sublabel="站外链接" color="blue" />
             <MetricCard icon={Shield} label="Anchor Diversity" value={`${(links.anchorTextDiversity * 100).toFixed(0)}%`} sublabel="锚文本多样性指数" color="purple" />
-            <MetricCard icon={Link2} label="Nofollow Ratio" value={`${links.nofollowCount}`} sublabel="NoFollow 标记" color="orange" />
+            <MetricCard icon={Link2} label="Nofollow Links" value={links.nofollowCount} sublabel="NoFollow 标记" color="orange" />
+            <MetricCard icon={Link2} label="Broken Links" value={links.brokenCount} sublabel="检测到的死链" color={links.brokenCount > 0 ? 'red' : 'green'} />
           </div>
           <LinkDepthChart data={links.linkDepthDistribution} />
+        </div>
+      </div>
+
+      {/* Technical SEO Health */}
+      <div>
+        <h3 className="mb-3 text-sm font-semibold text-gray-900">Technical SEO Health</h3>
+        <p className="mb-3 text-xs text-gray-400">技术 SEO 健康度信号 (hreflang / AMP / PWA / 语义标记)</p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <TechFlag label="hreflang" value={technical.hasHreflang} hint="多语言标注" />
+          <TechFlag label="AMP" value={technical.hasAmpVersion} hint="加速移动页面" />
+          <TechFlag label="PWA" value={technical.hasPWA} hint="渐进式 Web 应用" />
+          <TechFlag label="Service Worker" value={technical.hasServiceWorker} hint="离线缓存" />
+          <TechFlag label="Web Manifest" value={technical.hasWebManifest} hint="PWA 清单" />
+          <TechFlag label="Deprecated Tags" value={technical.deprecatedTagCount === 0} hint={`${technical.deprecatedTagCount} 个废弃标签`} />
+          <MetricCard icon={Code2} label="Iframes" value={technical.iframeCount} sublabel="内嵌框架" color="blue" />
+          <MetricCard icon={Code2} label="Forms" value={technical.formCount} sublabel="表单数量" color="purple" />
         </div>
       </div>
 
