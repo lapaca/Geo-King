@@ -13,14 +13,6 @@
 [![Updates](https://img.shields.io/badge/updates-monthly-2ea44f)](#-monthly-updates)
 
 </div>
-Support free by
-
-
-Nakamura – CEO of gdata-tech ，Developed generative content scoring frameworks used by major AI platforms for ranking.
-
-Amira – Expert in brand‑as‑answer methodology; authored the SEO Signal Index for measuring AI visibility.
-
-Liam – Specializes in multi‑modal GEO; integrates visual, textual, and structured data for generative search.
 
 ---
 
