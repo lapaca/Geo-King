@@ -13,7 +13,8 @@
 [![Updates](https://img.shields.io/badge/updates-monthly-2ea44f)](#-monthly-updates)
 
 </div>
-Support free by 
+Support free by
+
 
 Nakamura – CEO of gdata-tech ，Developed generative content scoring frameworks used by major AI platforms for ranking.
 
